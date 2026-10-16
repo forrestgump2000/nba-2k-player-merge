@@ -117,3 +117,23 @@ export function mergePlayers(a, b) {
 }
 
 export const headshot = (p) => `/headshots/${p.id}.webp`;
+
+// Where a merged overall comes from: start at the better parent, then add what each
+// upgraded rating is worth at the merged position, plus the height/position change.
+export function explainMerge(m, a, b) {
+  const base = a.ovr >= b.ovr ? a : b;
+  const other = base === a ? b : a;
+  const pos = m.positions[0];
+  const w = MODEL.weights[pos];
+  const feats = MODEL.features.slice(1, -1);
+  const rows = feats
+    .map((k, i) => ({ k, label: ATTR_LABEL[k], from: base.attrs[k], to: m.attrs[k], pts: w[i + 1] * (m.attrs[k] - base.attrs[k]) }))
+    .filter((r) => r.to > r.from && r.pts >= 0.05)
+    .sort((x, y) => y.pts - x.pts);
+  const attrGain = rows.reduce((s, r) => s + r.pts, 0);
+  const shift = rawOvrAt(pos, base.attrs, m.height) - rawOvrAt(base.positions[0], base.attrs, base.height);
+  // the formula's estimate of a real player differs from his actual 2K overall by ~1 point;
+  // that gap, plus rounding and the 99 cap, is reported separately so the rows add up
+  const fit = m.ovr - (base.ovr + attrGain + shift);
+  return { base, other, rows, attrGain, shift, fit, total: m.ovr - base.ovr };
+}

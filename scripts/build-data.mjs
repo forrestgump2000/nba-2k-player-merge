@@ -82,6 +82,9 @@ function solve(A, b) {
   }
   return M.map((row, i) => row[n] / row[i]);
 }
+// Durability is kept out of the overall formula (weight fixed at 0): it's availability,
+// not on-court skill. It still drives injuries in the career sim.
+const NO_WEIGHT = new Set(['durability']);
 const feats = (p) => [1, ...ATTRS.map((k) => p.attrs[k]), p.height];
 // Non-negative ridge regression (coordinate descent on centered data): every attribute
 // weight is >= 0, so raising a rating can never lower the overall. Height is unconstrained.
@@ -97,6 +100,7 @@ function fit(rows, lambda) {
     for (let j = 0; j < d; j++) {
       let r = 0;
       for (let i = 0; i < n; i++) r += Xc[i][j] * (yc[i] - pred[i] + Xc[i][j] * w[j]);
+      if (j < d - 1 && NO_WEIGHT.has(ATTRS[j])) continue;
       let nw = r / (sq[j] + (j < d - 1 ? lambda : 0));
       if (j < d - 1) nw = Math.max(0, nw);
       const dw = nw - w[j];

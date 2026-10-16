@@ -10,7 +10,7 @@ Fuse any two NBA 2K27 players into one, see every rating, save them to a locker 
 - **Height, weight, wingspan, age:** averaged.
 - **Every attribute** (all 36 2K ratings, plus 18 body-part durability ratings): the merged player keeps whichever player's rating is higher.
 - **Badges:** union of both players, keeping the higher tier.
-- **Overall:** estimated from the merged attributes with per-position models fitted to all 653 real 2K27 overalls (non-negative weights, so a better rating never lowers the overall; mean error ≈ 1 point on real players). The merged player plays whichever position his height allows and he rates best at.
+- **Overall:** estimated from the merged attributes with per-position models fitted to all 653 real 2K27 overalls (non-negative weights, so a better rating never lowers the overall; durability carries no weight; mean error ≈ 1 point on real players). The "Why X OVR?" panel breaks down every point. The merged player plays whichever position his height allows and he rates best at.
 - **Full Overall Sheet:** overall at every position (PG–C), the six category overalls, every attribute, body-part durability and badges.
 
 ## Career simulator

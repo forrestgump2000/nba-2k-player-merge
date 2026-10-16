@@ -1,7 +1,7 @@
 import React from 'react';
 import PLAYERS from '../data/players.json';
 import { TEAMS, team } from '../data/teams.js';
-import { CATEGORIES, PARTS, categoryOvrs, fmtHeight, mergePlayers, ratingClass, tier } from '../lib/ratings.js';
+import { CATEGORIES, PARTS, categoryOvrs, explainMerge, fmtHeight, mergePlayers, ratingClass, tier } from '../lib/ratings.js';
 import { Modal, Ovr, PlayerImg } from './common.jsx';
 
 const SORTED = PLAYERS.slice().sort((a, b) => b.ovr - a.ovr);
@@ -119,6 +119,34 @@ function AttrCompare({ a, b, m }) {
   );
 }
 
+const sign = (x) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(1)}`;
+
+function WhyOvr({ a, b, m }) {
+  const e = explainMerge(m, a, b);
+  const top = e.rows.slice(0, 8);
+  const rest = e.attrGain - top.reduce((s, r) => s + r.pts, 0);
+  return (
+    <details className="why">
+      <summary>Why {m.ovr} OVR?</summary>
+      <p className="muted" style={{ maxWidth: 720, lineHeight: 1.6 }}>
+        He starts from {e.base.name}'s {e.base.ovr}, then picks up every rating where {e.other.name} was better.
+        Two players with different strengths fill each other's holes, so the merged player is better than both at almost everything.
+        That's why two similar overalls usually land a few points higher. Bigger jumps happen when the two are very different (a shooter plus a rim protector, say).
+      </p>
+      <table>
+        <tbody>
+          <tr><td>{e.base.name}</td><td /><td style={{ color: 'var(--text)' }}>{e.base.ovr}</td></tr>
+          {top.map((r) => <tr key={r.k}><td>{r.label}</td><td className="muted">{r.from} → {r.to}</td><td>{sign(r.pts)}</td></tr>)}
+          {rest >= 0.05 && <tr><td>{e.rows.length - top.length} smaller upgrades</td><td /><td>{sign(rest)}</td></tr>}
+          {Math.abs(e.shift) >= 0.05 && <tr><td>Height {fmtHeight(m.height)} at {m.positions[0]}</td><td /><td style={{ color: e.shift < 0 ? 'var(--r-red)' : undefined }}>{sign(e.shift)}</td></tr>}
+          {Math.abs(e.fit) >= 0.3 && <tr><td>Formula estimate vs. {e.base.last}'s real 2K overall, rounding</td><td /><td style={{ color: e.fit < 0 ? 'var(--r-red)' : undefined }}>{sign(e.fit)}</td></tr>}
+          <tr className="tot"><td>Merged overall (rounded, max 99)</td><td /><td>{m.ovr}</td></tr>
+        </tbody>
+      </table>
+    </details>
+  );
+}
+
 function CountUp({ to }) {
   const [v, setV] = React.useState(40);
   React.useEffect(() => {
@@ -217,6 +245,7 @@ export default function MergeView({ state, setState, onSave, onCareer, savedIds,
               </div>
             </div>
           </div>
+          <WhyOvr a={p1} b={p2} m={merged} />
           <AttrCompare a={p1} b={p2} m={merged} />
         </div>
       ) : (
